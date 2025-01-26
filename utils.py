@@ -96,3 +96,41 @@ def generate_grid_probabilities(grid_size):
     
     return right_prob, left_prob, up_prob, down_prob
 
+
+
+
+def policy_evaluation(non_terminal_states, all_states, actions, probs_dict, reward_matrix, discount, action_policy_dict):
+    value_function = [0 for _ in range(16)]
+    for i in range(15):
+        print(f"iteration {i+1}")
+        for state in non_terminal_states:
+            value_function_temp = 0;
+            for action in actions:
+                state_reward_accumulation = 0;
+                for state_old in all_states: 
+                    state_reward_accumulation += probs_dict[action][state][state_old] * (reward_matrix[(state,action,state_old)] + discount*value_function[state_old]);
+                value_function_temp += action_policy_dict[state][action] * state_reward_accumulation;
+            value_function[state] = round(value_function_temp, 1);
+        print(value_function)
+    return value_function;
+
+
+
+def policy_improvement(value_function,non_terminal_states, all_states, actions, probs_dict, reward_matrix, discount, action_policy_dict):
+    policy_stable = True;
+    for state in non_terminal_states:
+        old_action = action_policy_dict[state];
+        action_values = {action: 0 for action in actions}
+        
+        for action in actions:
+            for next_state in all_states:
+                action_values[action] += probs_dict[action][state][next_state] * (reward_matrix[(state,action,next_state)] + discount * value_function[next_state])
+        
+        max_action = max(action_values, key=action_values.get);
+        action_policy_dict[state] = {action: 0 for action in actions};
+        action_policy_dict[state][max_action] = 1;
+
+        if old_action != action_policy_dict[state]:
+            policy_stable = False;
+    
+    return policy_stable, action_policy_dict;
